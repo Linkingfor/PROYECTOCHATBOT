@@ -14,7 +14,7 @@ import os
 from functools import lru_cache
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import NotFoundError, OpenAI, RateLimitError
 
 try:  # Usa los certificados del sistema; evita errores SSL con antivirus o proxies
     import truststore
@@ -28,6 +28,13 @@ load_dotenv()  # carga las variables definidas en el archivo .env
 NOMBRE_PROVEEDOR = os.getenv("PROVEEDOR", "Google Gemini (capa gratuita)")
 BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
 MODELO_CHAT = os.getenv("MODELO_CHAT", "gemini-3.5-flash-lite")
+# La capa gratuita limita las peticiones por día y por modelo. Si el modelo principal
+# agota su cuota (error 429), se prueban estos modelos en orden.
+MODELOS_RESPALDO = [
+    m.strip()
+    for m in os.getenv("MODELOS_RESPALDO", "gemini-3.1-flash-lite,gemini-flash-lite-latest,gemini-3.6-flash").split(",")
+    if m.strip()
+]
 VARIABLES_CLAVE = ("LLM_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY")
 
 # ----- Parte 2: Whisper -----
@@ -65,21 +72,35 @@ def crear_cliente(api_key: str | None = None) -> OpenAI:
             "No se encontró la API key. Escríbela en la barra lateral "
             "o guárdala en el archivo .env (por ejemplo GEMINI_API_KEY)."
         )
-    return OpenAI(api_key=key, base_url=BASE_URL)
+    return OpenAI(api_key=key, base_url=BASE_URL, max_retries=1)
 
 
-def responder(cliente: OpenAI, historial: list[dict]):
-    """Parte 1: devuelve la respuesta del modelo como un generador (streaming)."""
+def responder(cliente: OpenAI, historial: list[dict], info: dict | None = None):
+    """Parte 1: devuelve la respuesta del modelo como un generador (streaming).
+
+    Si el modelo principal responde con error 429 (cuota agotada) o no está disponible,
+    se intenta con los modelos de respaldo. El modelo que respondió queda en info["modelo"].
+    """
     mensajes = [{"role": "system", "content": PROMPT_SISTEMA}] + [
         {"role": m["role"], "content": m["content"]} for m in historial
     ]
-    stream = cliente.chat.completions.create(
-        model=MODELO_CHAT,
-        messages=mensajes,
-        temperature=0.7,
-        max_tokens=2000,
-        stream=True,
-    )
+    stream, ultimo_error = None, None
+    for modelo in [MODELO_CHAT, *MODELOS_RESPALDO]:
+        try:
+            stream = cliente.chat.completions.create(
+                model=modelo,
+                messages=mensajes,
+                temperature=0.7,
+                max_tokens=2000,
+                stream=True,
+            )
+            break
+        except (RateLimitError, NotFoundError) as error:  # probar el siguiente modelo
+            ultimo_error = error
+    if stream is None:
+        raise ultimo_error
+    if info is not None:
+        info["modelo"] = modelo
     for parte in stream:
         if parte.choices and parte.choices[0].delta.content:
             yield parte.choices[0].delta.content

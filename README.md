@@ -18,7 +18,7 @@ La API de OpenAI es de pago. Se buscó una alternativa gratuita que permitiera r
 | Chat | Google Gemini expone una API compatible con la de OpenAI, así que se usa la misma librería `openai` cambiando solo la URL base y la clave | `gemini-3.5-flash-lite` | Gratis (capa gratuita de AI Studio) |
 | Voz | Whisper corre en la propia computadora con `faster-whisper` (sin clave). El modelo se descarga la primera vez que se usa | Whisper `small` | Gratis |
 
-La clave de Gemini se obtiene en <https://aistudio.google.com/apikey>. La capa gratuita de Gemini tiene un tope de peticiones por día y por modelo (por ejemplo, 20 al día para `gemini-3.5-flash-lite`), suficiente para probar el chatbot. Si se necesita más volumen, Groq ofrece miles de peticiones diarias gratis y el mismo código funciona con solo cambiar el `.env` (ver más abajo). Si se prefiere la ruta por API para Whisper, basta con poner una clave gratuita de Groq en el `.env`.
+La clave de Gemini se obtiene en <https://aistudio.google.com/apikey>. La capa gratuita de Gemini tiene un tope de peticiones por día y por modelo (por ejemplo, 20 al día para `gemini-3.5-flash-lite`), suficiente para probar el chatbot. Si el modelo principal agota su cuota, el chatbot pasa solo a los modelos de respaldo definidos en `MODELOS_RESPALDO` (cada modelo tiene su propia cuota diaria) y lo indica debajo de la respuesta. Si se necesita más volumen, Groq ofrece miles de peticiones diarias gratis y el mismo código funciona con solo cambiar el `.env` (ver más abajo). Si se prefiere la ruta por API para Whisper, basta con poner una clave gratuita de Groq en el `.env`.
 
 ## Instalación y ejecución
 

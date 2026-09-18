@@ -72,7 +72,10 @@ def enviar(texto: str, por_voz: bool = False):
     with st.chat_message("assistant"):
         try:
             cliente = crear_cliente(api_key)
-            respuesta = st.write_stream(responder(cliente, st.session_state.mensajes))
+            info = {}
+            respuesta = st.write_stream(responder(cliente, st.session_state.mensajes, info))
+            if info.get("modelo") and info["modelo"] != MODELO_CHAT:
+                st.caption(f"Respondió el modelo de respaldo `{info['modelo']}` (cuota del principal agotada).")
         except Exception as error:
             respuesta = f"⚠️ No pude responder: {error}"
             st.error(respuesta)
