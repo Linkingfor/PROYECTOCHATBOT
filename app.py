@@ -9,7 +9,7 @@ import streamlit as st
 from chatbot import (
     MODELO_CHAT,
     MODELO_WHISPER,
-    PROVEEDOR,
+    NOMBRE_PROVEEDOR,
     crear_cliente,
     responder,
     transcribir,
@@ -37,9 +37,9 @@ with st.sidebar:
     api_key = st.text_input(
         "API key (opcional si está en .env)",
         type="password",
-        help="Se obtiene gratis en https://console.groq.com/keys",
+        help="La clave de Gemini se obtiene gratis en https://aistudio.google.com/apikey",
     )
-    st.caption(f"Proveedor: {PROVEEDOR}")
+    st.caption(f"Proveedor: {NOMBRE_PROVEEDOR}")
     st.caption(f"Modelo de chat: `{MODELO_CHAT}`")
     st.caption(f"Modelo de voz: `{MODELO_WHISPER}`")
     st.button("🗑️ Nueva conversación", on_click=reiniciar_chat)
@@ -85,10 +85,9 @@ if boton_transcribir:
     if audio is None:
         st.sidebar.warning("Primero graba o sube un audio.")
     else:
-        with st.spinner("Transcribiendo con Whisper..."):
+        with st.spinner("Transcribiendo con Whisper (la primera vez carga el modelo)..."):
             try:
-                cliente = crear_cliente(api_key)
-                texto = transcribir(cliente, audio.getvalue(), audio.name)
+                texto = transcribir(audio.getvalue(), audio.name)
             except Exception as error:
                 texto = ""
                 st.sidebar.error(f"No pude transcribir: {error}")
