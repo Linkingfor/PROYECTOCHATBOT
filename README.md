@@ -53,13 +53,6 @@ PROYECTOCHATBOT/
 2. Cada pregunta se envía a `responder()` en `chatbot.py`, que arma la lista de mensajes (prompt de sistema + historial) y llama a `chat.completions.create` con `stream=True`. La respuesta se muestra en vivo con `st.write_stream`.
 3. Para la voz, `st.audio_input` o `st.file_uploader` entregan los bytes del audio. `transcribir()` los pasa al modelo Whisper con el idioma español y un texto de contexto con nombres de platos. El texto resultante entra al mismo flujo del chat, marcado con un ícono de micrófono.
 
-## Audios de prueba
-
-Los archivos de `audio_prueba/` se generaron con la voz `es-PE-CamilaNeural` de edge-tts y sirven para probar la transcripción sin micrófono:
-
-- `pregunta_ceviche.mp3`: "Hola, ¿cómo se prepara un ceviche peruano y qué ingredientes necesito?"
-- `pregunta_lomo_saltado.mp3`: "¿Cuál es la historia del lomo saltado y de qué región del Perú viene?"
-- `pregunta_postres.mp3`: "¿Qué postres típicos me recomiendas probar en Lima?"
 
 ## Otros proveedores (opcional)
 
